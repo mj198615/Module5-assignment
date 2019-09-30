@@ -1,42 +1,32 @@
 (function () {
-"use strict";
+    var myApp = angular.module('public');
+    myApp.controller('formController', FormController);
 
-angular.module('public')
-.controller('SignUpController', SignUpController);
+    FormController.$inject = ['MenuService', 'InfoService'];
+    function FormController(MenuService, InfoService) {
+        var reg = this;
+        reg.invalidFavourite = false;
+        reg.showMsg=false;
+        reg.submit = function () {
+            MenuService.getMenuItem(reg.user.food)
+                .then(function (response) {
+                    InfoService.saveUserDetail(reg.user);
+                    reg.showMsg=true;
+                })
+                .catch(function () {
+                    console.log("Invalid");
+                    reg.showMsg=false;
+                });
+        };
 
-SignUpController.$inject = ['MenuService', 'SignUpDataService', 'menuItems'];
-
-function SignUpController(MenuService, SignUpDataService, menuItems) {
-  var $ctrl = this;
-  var shortNames = [];
-  for (var i = 0; i < menuItems.menu_items.length; i++) {
-    shortNames.push(menuItems.menu_items[i].short_name.toLowerCase() + "");
-  }
-  
-  $ctrl.validateFavourite = function() {
-    if ($ctrl.user != undefined && $ctrl.user.favourite != undefined) {
-      var favourite = $ctrl.user.favourite.toLowerCase();
-      if (shortNames.indexOf(favourite) != -1) {
-        $ctrl.invalidDish = false;
-      } else {
-        $ctrl.invalidDish = true;
-      }
-    } else {
-      $ctrl.invalidDish = true;
-    }
-  }
-
-  $ctrl.submit = function() {
-    MenuService.getMenuItemByShortName($ctrl.user.favourite).then(function(result) {
-      $ctrl.invalidDish = false;
-      $ctrl.user.favouriteMenuItem = result;
-      SignUpDataService.setUserPref($ctrl.user);
-      $ctrl.saved = true;
-    }, function(error) {
-      $ctrl.invalidDish = true;
-      $ctrl.saved = false;
-    });
-  };
-}
-
+        reg.validateFood = function () {
+            MenuService.getMenuItem(reg.user.food)
+                .then(function (response) {
+                    reg.invalidFavourite = false;
+                })
+                .catch(function () {
+                    reg.invalidFavourite = true;
+                });
+        };
+    };
 })();
